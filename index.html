@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tamil PDF Library</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCz4FJZkyykx50RE0_i8yNEc9lOszxjlHI",
+      authDomain: "tamilpdflibrary.firebaseapp.com",
+      projectId: "tamilpdflibrary",
+      storageBucket: "tamilpdflibrary.appspot.com",
+      messagingSenderId: "730424795503",
+      appId: "1:730424795503:web:12fec7c518129ec145889a",
+      measurementId: "G-2DTDBLXCJH"
+    };
+    
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    // Make auth available globally
+    window.firebaseAuth = auth;
+    window.GoogleAuthProvider = GoogleAuthProvider;
+    window.signInWithPopup = signInWithPopup;
+    window.onAuthStateChanged = onAuthStateChanged;
+    window.signOut = signOut;
+  </script>
+</head>
+<body>
+
+  <!-- Scroll Progress Indicator -->
+  <div class="scroll-indicator" id="scrollProgress"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="#home" class="logo">TAMIL</a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home">Home</a></li>
+      <li><a href="#category">Category</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <div class="auth">
+      <span id="userName"></span>
+      <button id="loginBtn">Sign in with Google</button>
+      <button id="logoutBtn" style="display: none;">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Home Section -->
+  <header id="home" class="hero">
+    <div class="hero-content">
+      <h1>தமிழ் இலக்கிய நூலகம்</h1>
+      <p>Explore 1000+ Tamil and English PDFs of poems, literature, and more.</p>
+      <a href="#category" class="btn">Browse Categories</a>
+    </div>
+  </header>
+
+  <!-- Category Section -->
+  <section id="category" class="category-section">
+    <h2>Explore by Category</h2>
+    <div class="category-grid">
+      <div class="category-card">Poems</div>
+      <div class="category-card">Literature</div>
+      <div class="category-card">Thirukkural</div>
+      <div class="category-card">History</div>
+      <div class="category-card">Tamil Grammar</div>
+      <div class="category-card">English Translations</div>
+    </div>
+  </section>
+
+  <!-- PDF List Section -->
+  <section id="pdf-list" class="pdf-list-section" style="display: none;">
+    <h2 id="pdf-title">Category PDFs</h2>
+    <div class="pdf-grid" id="pdf-grid">
+      <!-- Loaded dynamically -->
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact-section">
+    <div class="contact-content">
+      <h2>Contact Us</h2>
+      <div class="contact-grid">
+        <div class="contact-info">
+          <h3>Get In Touch</h3>
+          <p>We'd love to hear from you! Feel free to reach out to us through any of the following channels or use our feedback form.</p>
+          <p><strong>Email:</strong> tamilpdf@example.com</p>
+          <p><strong>Instagram:</strong> @tamilpdf</p>
+          <p><strong>Response Time:</strong> Within 24 hours</p>
+        </div>
+        <div class="feedback-form">
+          <h3>Send us Feedback</h3>
+          <form id="feedbackForm">
+            <div class="form-group">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+              <label for="email">EMail</label>
+              <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+            </div>
+            <div class="form-group">
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Tell us about your experience, suggestions, or any feedback you'd like to share..." required></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Send Feedback</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Your JS -->
+  <script src="assets/js/main.js"></script>
+  <script>
+  // Hamburger menu toggle
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const navLinks = document.getElementById('navLinks');
+
+  hamburgerBtn.addEventListener('click', () => {
+    navLinks.classList.toggle('open');
+    hamburgerBtn.classList.toggle('open');
+    const expanded = hamburgerBtn.getAttribute('aria-expanded') === 'true';
+    hamburgerBtn.setAttribute('aria-expanded', !expanded);
+  });
+  </script>
+</body>
+</html>
