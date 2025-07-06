@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Button Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: white;
+        }
+        .debug-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+        .pdf-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .heart-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            z-index: 1000;
+            pointer-events: auto;
+            user-select: none;
+        }
+        .heart-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+        .heart-btn.favorited {
+            background: #ff4757;
+            border-color: #ff4757;
+            color: white;
+        }
+        .heart-btn.favorited:hover {
+            background: #ff3742;
+            border-color: #ff3742;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Heart Button Debug Test</h1>
+    
+    <div class="debug-section">
+        <h2>Test 1: Basic Heart Button</h2>
+        <button class="btn" onclick="createBasicHeart()">Create Basic Heart Button</button>
+        <div id="basic-heart-test"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Test 2: PDF Card with Heart Button</h2>
+        <button class="btn" onclick="createPdfCard()">Create PDF Card with Heart</button>
+        <div id="pdf-card-test"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Test 3: Function Availability</h2>
+        <button class="btn" onclick="checkFunctions()">Check Function Availability</button>
+        <div id="function-test"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Test 4: Click Event Test</h2>
+        <button class="btn" onclick="testClickEvents()">Test Click Events</button>
+        <div id="click-test"></div>
+    </div>
+
+    <script>
+        // Mock functions for testing
+        function mockToggleFavorite(pdfId) {
+            console.log('Mock toggleFavorite called with:', pdfId);
+            alert(`Mock toggleFavorite called with PDF ID: ${pdfId}`);
+        }
+        
+        function createBasicHeart() {
+            const container = document.getElementById('basic-heart-test');
+            container.innerHTML = `
+                <div class="status info">Creating basic heart button...</div>
+                <div style="position: relative; height: 100px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 20px 0;">
+                    <button class="heart-btn" onclick="mockToggleFavorite('test-pdf')">
+                        🤍
+                    </button>
+                    <div style="padding: 20px;">Click the heart button above</div>
+                </div>
+            `;
+        }
+        
+        function createPdfCard() {
+            const container = document.getElementById('pdf-card-test');
+            container.innerHTML = `
+                <div class="status info">Creating PDF card with heart button...</div>
+                <div class="pdf-card">
+                    <button class="heart-btn" onclick="mockToggleFavorite('test-pdf-2')">
+                        🤍
+                    </button>
+                    <div style="width: 100%; height: 120px; background: rgba(255, 255, 255, 0.1); border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                        📄
+                    </div>
+                    <h3>Test PDF</h3>
+                    <p style="margin: 10px 0; opacity: 0.8; font-size: 14px;">By Test Author</p>
+                    <p style="margin: 10px 0; opacity: 0.7; font-size: 13px;">10 pages • 1.2 MB</p>
+                    <div style="margin-top: 20px;">
+                        <a href="#" style="color: white; text-decoration: none; margin: 0 10px;">View</a>
+                        <a href="#" style="color: white; text-decoration: none; margin: 0 10px;">Download</a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function checkFunctions() {
+            const container = document.getElementById('function-test');
+            const functions = {
+                'window.toggleFavorite': typeof window.toggleFavorite,
+                'window.displayFavorites': typeof window.displayFavorites,
+                'window.showCategorySection': typeof window.showCategorySection,
+                'mockToggleFavorite': typeof mockToggleFavorite
+            };
+            
+            let html = '<div class="status info">Checking function availability...</div>';
+            for (const [funcName, funcType] of Object.entries(functions)) {
+                const status = funcType === 'function' ? 'success' : 'error';
+                const icon = funcType === 'function' ? '✅' : '❌';
+                html += `<div class="status ${status}">${icon} ${funcName}: ${funcType}</div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        function testClickEvents() {
+            const container = document.getElementById('click-test');
+            container.innerHTML = `
+                <div class="status info">Testing click events...</div>
+                <div style="position: relative; height: 100px; background: rgba(255,255,255,0.1); border-radius: 8px; margin: 20px 0;">
+                    <button class="heart-btn" id="test-heart-btn">
+                        🤍
+                    </button>
+                    <div style="padding: 20px;">Click the heart button above</div>
+                </div>
+            `;
+            
+            // Add event listener
+            const heartBtn = document.getElementById('test-heart-btn');
+            if (heartBtn) {
+                heartBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Heart button clicked via event listener');
+                    alert('Heart button clicked via event listener!');
+                });
+                
+                container.innerHTML += '<div class="status success">✅ Event listener added successfully</div>';
+            } else {
+                container.innerHTML += '<div class="status error">❌ Could not find heart button</div>';
+            }
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkFunctions();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

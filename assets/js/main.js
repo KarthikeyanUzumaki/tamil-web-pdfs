@@ -173,6 +173,10 @@ async function loadUserFavorites() {
 }
 
 async function toggleFavorite(pdfId) {
+  console.log('toggleFavorite called with pdfId:', pdfId);
+  console.log('Current user:', currentUser);
+  console.log('Firebase DB available:', !!window.firebaseDb);
+  
   if (!currentUser || !window.firebaseDb) {
     alert('Please sign in to add favorites');
     return;
@@ -255,7 +259,7 @@ function displayFavorites() {
       div.className = 'pdf-card';
       div.style.animationDelay = `${index * 0.1}s`;
       div.innerHTML = `
-        <button class="heart-btn favorited" data-pdf-id="${pdf.id}" onclick="toggleFavorite('${pdf.id}')">
+        <button class="heart-btn favorited" data-pdf-id="${pdf.id}">
           ❤️
         </button>
         <div class="pdf-thumbnail" style="
@@ -283,6 +287,18 @@ function displayFavorites() {
           <a href="${pdf.downloadUrl}" target="_blank" onclick="trackPdfDownload('${pdf.id}')">Download</a>
         </div>
       `;
+      
+      // Add event listener to heart button
+      const heartBtn = div.querySelector('.heart-btn');
+      if (heartBtn) {
+        heartBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Heart button clicked for PDF in favorites:', pdf.id);
+          toggleFavorite(pdf.id);
+        });
+      }
+      
       favoritesGrid.appendChild(div);
     });
   }
@@ -464,8 +480,10 @@ function displayPdfs(category, page = 1, searchQuery = '') {
       const heartIcon = isFavorited ? '❤️' : '🤍';
       const heartClass = isFavorited ? 'heart-btn favorited' : 'heart-btn';
       
+      console.log('Creating heart button for PDF:', pdf.id, 'Favorited:', isFavorited);
+      
       div.innerHTML = `
-        <button class="${heartClass}" data-pdf-id="${pdf.id}" onclick="toggleFavorite('${pdf.id}')">
+        <button class="${heartClass}" data-pdf-id="${pdf.id}" style="z-index: 1000;">
           ${heartIcon}
         </button>
         <div class="pdf-thumbnail" style="
@@ -493,6 +511,18 @@ function displayPdfs(category, page = 1, searchQuery = '') {
           <a href="${pdf.downloadUrl}" target="_blank" onclick="trackPdfDownload('${pdf.id}')">Download</a>
         </div>
       `;
+      
+      // Add event listener to heart button
+      const heartBtn = div.querySelector('.heart-btn');
+      if (heartBtn) {
+        heartBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Heart button clicked for PDF:', pdf.id);
+          toggleFavorite(pdf.id);
+        });
+      }
+      
       pdfGrid.appendChild(div);
     });
     
@@ -775,14 +805,38 @@ document.querySelectorAll('.form-group input, .form-group textarea').forEach(fie
   });
 });
 
-// Make functions globally available
+// Initialize application
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('DOM loaded, initializing application...');
+  
+  // Make functions globally available immediately
 window.toggleFavorite = toggleFavorite;
 window.displayFavorites = displayFavorites;
 window.showCategorySection = showCategorySection;
 
-// Initialize application
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOM loaded, initializing application...');
+// Test function to check if heart buttons are working
+window.testHeartButton = function() {
+  console.log('Testing heart button functionality...');
+  console.log('toggleFavorite function available:', typeof window.toggleFavorite);
+  
+  // Create a test heart button
+  const testDiv = document.createElement('div');
+  testDiv.innerHTML = `
+    <button class="heart-btn" onclick="toggleFavorite('test-pdf')" style="position: relative; top: 0; right: 0;">
+      🤍
+    </button>
+  `;
+  document.body.appendChild(testDiv);
+  
+  console.log('Test heart button created. Try clicking it!');
+};
+  
+  console.log('Global functions made available:', {
+    toggleFavorite: typeof window.toggleFavorite,
+    displayFavorites: typeof window.displayFavorites,
+    showCategorySection: typeof window.showCategorySection
+  });
+  
   // Load PDF data on page load
   await loadPdfData();
   console.log('PDF Database loaded:', pdfDatabase?.metadata);

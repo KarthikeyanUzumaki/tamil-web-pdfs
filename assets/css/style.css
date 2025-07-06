@@ -1028,7 +1028,9 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 18px;
-  z-index: 10;
+  z-index: 1000;
+  pointer-events: auto;
+  user-select: none;
 }
 
 .heart-btn:hover {
