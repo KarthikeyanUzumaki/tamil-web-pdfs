@@ -1011,3 +1011,108 @@ body {
     gap: 25px;
   }
 }
+
+/* Heart Button Styles */
+.heart-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 18px;
+  z-index: 10;
+}
+
+.heart-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.heart-btn.favorited {
+  background: #ff4757;
+  border-color: #ff4757;
+  color: white;
+}
+
+.heart-btn.favorited:hover {
+  background: #ff3742;
+  border-color: #ff3742;
+  transform: scale(1.1);
+}
+
+/* PDF Card with Heart Button */
+.pdf-card {
+  position: relative;
+}
+
+/* Favorites Section */
+#favorites {
+  min-height: 60vh;
+}
+
+#favorites-title {
+  color: #ffffff;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 50px;
+  position: relative;
+  letter-spacing: 1px;
+}
+
+#favorites-title::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff4757, #ff6b7a);
+  border-radius: 2px;
+}
+
+/* Empty Favorites State */
+.empty-favorites {
+  text-align: center;
+  padding: 60px 20px;
+  color: #cccccc;
+}
+
+.empty-favorites h3 {
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #ffffff;
+}
+
+.empty-favorites p {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-bottom: 30px;
+}
+
+.empty-favorites .btn {
+  display: inline-block;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.empty-favorites .btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}

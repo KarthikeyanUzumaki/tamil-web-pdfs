@@ -5,7 +5,7 @@ const userName = document.getElementById('userName');
 
 // Wait for Firebase to be available
 const waitForFirebase = setInterval(() => {
-  if (window.firebaseAuth && window.onAuthStateChanged) {
+  if (window.firebaseAuth && window.onAuthStateChanged && window.firebaseDb) {
     clearInterval(waitForFirebase);
     initializeAuth();
   }
@@ -16,14 +16,38 @@ function initializeAuth() {
   window.onAuthStateChanged(window.firebaseAuth, (user) => {
     if (user) {
       // User is signed in
+      currentUser = user;
       userName.textContent = `Hello, ${user.displayName}`;
       loginBtn.style.display = 'none';
       logoutBtn.style.display = 'inline-block';
+      
+      // Show favorites link
+      const favoritesLink = document.getElementById('favoritesLink');
+      if (favoritesLink) {
+        favoritesLink.style.display = 'inline-block';
+      }
+      
+      // Load user favorites
+      loadUserFavorites();
     } else {
       // User is signed out
+      currentUser = null;
+      userFavorites.clear();
       userName.textContent = '';
       loginBtn.style.display = 'block';
       logoutBtn.style.display = 'none';
+      
+      // Hide favorites link
+      const favoritesLink = document.getElementById('favoritesLink');
+      if (favoritesLink) {
+        favoritesLink.style.display = 'none';
+      }
+      
+      // Hide favorites section if visible
+      const favoritesSection = document.getElementById('favorites');
+      if (favoritesSection) {
+        favoritesSection.style.display = 'none';
+      }
     }
   });
 }
@@ -69,6 +93,10 @@ let currentCategory = '';
 let currentPage = 1;
 const itemsPerPage = 12;
 
+// Favorites Management
+let userFavorites = new Set();
+let currentUser = null;
+
 // Load PDF data from JSON file
 async function loadPdfData() {
   try {
@@ -109,6 +137,164 @@ async function loadPdfData() {
     updateCategoryCards();
     return pdfDatabase;
   }
+}
+
+// Favorites Management Functions
+async function loadUserFavorites() {
+  if (!currentUser || !window.firebaseDb) {
+    console.log('No user or Firebase not available');
+    return;
+  }
+  
+  try {
+    console.log('Loading favorites for user:', currentUser.uid);
+    const userDocRef = window.firestore.doc(window.firebaseDb, 'users', currentUser.uid);
+    const userDoc = await window.firestore.getDoc(userDocRef);
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      userFavorites = new Set(userData.favorites || []);
+      console.log('Loaded favorites:', Array.from(userFavorites));
+    } else {
+      // Create user document if it doesn't exist
+      await window.firestore.setDoc(userDocRef, {
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+        favorites: [],
+        createdAt: new Date()
+      });
+      userFavorites = new Set();
+      console.log('Created new user document');
+    }
+  } catch (error) {
+    console.error('Error loading favorites:', error);
+    userFavorites = new Set();
+  }
+}
+
+async function toggleFavorite(pdfId) {
+  if (!currentUser || !window.firebaseDb) {
+    alert('Please sign in to add favorites');
+    return;
+  }
+  
+  try {
+    const userDocRef = window.firestore.doc(window.firebaseDb, 'users', currentUser.uid);
+    
+    if (userFavorites.has(pdfId)) {
+      // Remove from favorites
+      userFavorites.delete(pdfId);
+      console.log('Removed from favorites:', pdfId);
+    } else {
+      // Add to favorites
+      userFavorites.add(pdfId);
+      console.log('Added to favorites:', pdfId);
+    }
+    
+    // Update Firestore
+    await window.firestore.setDoc(userDocRef, {
+      email: currentUser.email,
+      displayName: currentUser.displayName,
+      favorites: Array.from(userFavorites),
+      updatedAt: new Date()
+    }, { merge: true });
+    
+    // Update UI
+    updateHeartButton(pdfId);
+    
+  } catch (error) {
+    console.error('Error updating favorites:', error);
+    alert('Error updating favorites. Please try again.');
+  }
+}
+
+function updateHeartButton(pdfId) {
+  const heartBtn = document.querySelector(`[data-pdf-id="${pdfId}"]`);
+  if (heartBtn) {
+    if (userFavorites.has(pdfId)) {
+      heartBtn.classList.add('favorited');
+      heartBtn.innerHTML = '❤️';
+    } else {
+      heartBtn.classList.remove('favorited');
+      heartBtn.innerHTML = '🤍';
+    }
+  }
+}
+
+function displayFavorites() {
+  const favoritesSection = document.getElementById('favorites');
+  const favoritesGrid = document.getElementById('favorites-grid');
+  
+  if (!favoritesSection || !favoritesGrid) return;
+  
+  // Hide other sections
+  document.getElementById('pdf-list').style.display = 'none';
+  document.getElementById('category').style.display = 'none';
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('contact').style.display = 'none';
+  
+  // Show favorites section
+  favoritesSection.style.display = 'block';
+  
+  // Get favorite PDFs
+  const favoritePdfs = pdfDatabase.pdfs.filter(pdf => userFavorites.has(pdf.id));
+  
+  if (favoritePdfs.length === 0) {
+    favoritesGrid.innerHTML = `
+      <div class="empty-favorites" style="grid-column: 1 / -1;">
+        <h3>No Favorites Yet</h3>
+        <p>Start exploring PDFs and add them to your favorites by clicking the heart button!</p>
+        <a href="#category" class="btn" onclick="showCategorySection()">Browse Categories</a>
+      </div>
+    `;
+  } else {
+    favoritesGrid.innerHTML = '';
+    
+    favoritePdfs.forEach((pdf, index) => {
+      const div = document.createElement('div');
+      div.className = 'pdf-card';
+      div.style.animationDelay = `${index * 0.1}s`;
+      div.innerHTML = `
+        <button class="heart-btn favorited" data-pdf-id="${pdf.id}" onclick="toggleFavorite('${pdf.id}')">
+          ❤️
+        </button>
+        <div class="pdf-thumbnail" style="
+          width: 100%;
+          height: 120px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+        ">
+          📄
+        </div>
+        <h3>${pdf.title}</h3>
+        <p style="margin: 10px 0; opacity: 0.8; font-size: 14px;">
+          By ${pdf.author || 'Unknown Author'}
+        </p>
+        <p style="margin: 10px 0; opacity: 0.7; font-size: 13px;">
+          ${pdf.pages || 'N/A'} pages • ${pdf.fileSize || 'Unknown size'}
+        </p>
+        <div style="margin-top: 20px;">
+          <a href="${pdf.viewUrl}" target="_blank" onclick="trackPdfView('${pdf.id}')">View</a>
+          <a href="${pdf.downloadUrl}" target="_blank" onclick="trackPdfDownload('${pdf.id}')">Download</a>
+        </div>
+      `;
+      favoritesGrid.appendChild(div);
+    });
+  }
+}
+
+function showCategorySection() {
+  // Show category section and hide others
+  document.getElementById('category').style.display = 'block';
+  document.getElementById('pdf-list').style.display = 'none';
+  document.getElementById('favorites').style.display = 'none';
+  document.getElementById('home').style.display = 'none';
+  document.getElementById('contact').style.display = 'none';
 }
 
 // Update category cards with real data
@@ -272,7 +458,16 @@ function displayPdfs(category, page = 1, searchQuery = '') {
       const div = document.createElement('div');
       div.className = 'pdf-card';
       div.style.animationDelay = `${index * 0.1}s`;
+      
+      // Check if this PDF is in user's favorites
+      const isFavorited = userFavorites.has(pdf.id);
+      const heartIcon = isFavorited ? '❤️' : '🤍';
+      const heartClass = isFavorited ? 'heart-btn favorited' : 'heart-btn';
+      
       div.innerHTML = `
+        <button class="${heartClass}" data-pdf-id="${pdf.id}" onclick="toggleFavorite('${pdf.id}')">
+          ${heartIcon}
+        </button>
         <div class="pdf-thumbnail" style="
           width: 100%;
           height: 120px;
@@ -387,6 +582,12 @@ document.querySelectorAll('.category-card').forEach(card => {
       card.style.transform = '';
     }, 150);
 
+    // Hide other sections and show PDF list
+    document.getElementById('category').style.display = 'none';
+    document.getElementById('favorites').style.display = 'none';
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('contact').style.display = 'none';
+
     displayPdfs(category, 1);
   });
 });
@@ -395,12 +596,32 @@ document.querySelectorAll('.category-card').forEach(card => {
 document.querySelectorAll('.navbar a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
     e.preventDefault();
-    const target = document.querySelector(this.getAttribute('href'));
-    if (target) {
-      target.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start'
-      });
+    const href = this.getAttribute('href');
+    
+    if (href === '#favorites') {
+      // Handle favorites link
+      if (!currentUser) {
+        alert('Please sign in to view your favorites');
+        return;
+      }
+      displayFavorites();
+    } else {
+      // Handle other navigation links
+      const target = document.querySelector(href);
+      if (target) {
+        // Hide all sections first
+        document.querySelectorAll('section').forEach(section => {
+          section.style.display = 'none';
+        });
+        
+        // Show the target section
+        target.style.display = 'block';
+        
+        target.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
     }
   });
 });
@@ -553,6 +774,11 @@ document.querySelectorAll('.form-group input, .form-group textarea').forEach(fie
     this.parentElement.style.transform = 'scale(1)';
   });
 });
+
+// Make functions globally available
+window.toggleFavorite = toggleFavorite;
+window.displayFavorites = displayFavorites;
+window.showCategorySection = showCategorySection;
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {

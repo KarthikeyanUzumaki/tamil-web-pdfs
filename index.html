@@ -10,6 +10,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
     import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getFirestore, doc, setDoc, deleteDoc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     
     const firebaseConfig = {
       apiKey: "AIzaSyCz4FJZkyykx50RE0_i8yNEc9lOszxjlHI",
@@ -24,13 +25,25 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    const db = getFirestore(app);
     
-    // Make auth available globally
+    // Make Firebase services available globally
     window.firebaseAuth = auth;
+    window.firebaseDb = db;
     window.GoogleAuthProvider = GoogleAuthProvider;
     window.signInWithPopup = signInWithPopup;
     window.onAuthStateChanged = onAuthStateChanged;
     window.signOut = signOut;
+    window.firestore = {
+      doc,
+      setDoc,
+      deleteDoc,
+      getDoc,
+      collection,
+      query,
+      where,
+      getDocs
+    };
   </script>
 </head>
 <body>
@@ -47,6 +60,7 @@
     <ul class="nav-links" id="navLinks">
       <li><a href="#home">Home</a></li>
       <li><a href="#category">Category</a></li>
+      <li><a href="#favorites" id="favoritesLink" style="display: none;">❤️ Favorites</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
     <div class="auth">
@@ -82,6 +96,14 @@
   <section id="pdf-list" class="pdf-list-section" style="display: none;">
     <h2 id="pdf-title">Category PDFs</h2>
     <div class="pdf-grid" id="pdf-grid">
+      <!-- Loaded dynamically -->
+    </div>
+  </section>
+
+  <!-- Favorites Section -->
+  <section id="favorites" class="pdf-list-section" style="display: none;">
+    <h2 id="favorites-title">❤️ My Favorites</h2>
+    <div class="pdf-grid" id="favorites-grid">
       <!-- Loaded dynamically -->
     </div>
   </section>
