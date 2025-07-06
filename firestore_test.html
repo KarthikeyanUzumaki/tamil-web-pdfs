@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firestore Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firestore Connection Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Check Firebase Connection</h2>
+        <button class="btn" onclick="checkFirebase()">Check Firebase</button>
+        <div id="firebase-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Firestore Write</h2>
+        <button class="btn" onclick="testFirestoreWrite()">Test Write to Firestore</button>
+        <div id="write-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Firestore Read</h2>
+        <button class="btn" onclick="testFirestoreRead()">Test Read from Firestore</button>
+        <div id="read-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Test User Document</h2>
+        <button class="btn" onclick="testUserDocument()">Test User Document</button>
+        <div id="user-status"></div>
+    </div>
+
+    <script>
+        // Import Firebase (same as in your main site)
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, deleteDoc, getDoc, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCz4FJZkyykx50RE0_i8yNEc9lOszxjlHI",
+            authDomain: "tamilpdflibrary.firebaseapp.com",
+            projectId: "tamilpdflibrary",
+            storageBucket: "tamilpdflibrary.appspot.com",
+            messagingSenderId: "730424795503",
+            appId: "1:730424795503:web:12fec7c518129ec145889a",
+            measurementId: "G-2DTDBLXCJH"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+        
+        // Listen for auth state changes
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                console.log('User signed in:', user.email);
+                document.getElementById('user-status').innerHTML = `
+                    <div class="status success">✅ User signed in: ${user.email}</div>
+                `;
+            } else {
+                console.log('User signed out');
+                document.getElementById('user-status').innerHTML = `
+                    <div class="status info">ℹ️ No user signed in</div>
+                `;
+            }
+        });
+        
+        function checkFirebase() {
+            const statusDiv = document.getElementById('firebase-status');
+            
+            if (app && auth && db) {
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ Firebase initialized successfully</div>
+                    <div class="status info">App: ${app.name}</div>
+                    <div class="status info">Auth: ${auth.app.name}</div>
+                    <div class="status info">Firestore: ${db.app.name}</div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Firebase not initialized properly</div>
+                `;
+            }
+        }
+        
+        async function testFirestoreWrite() {
+            const statusDiv = document.getElementById('write-status');
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Testing Firestore write...</div>';
+                
+                const testDocRef = doc(db, 'test', 'connection-test');
+                const testData = {
+                    message: 'Hello Firestore!',
+                    timestamp: new Date(),
+                    test: true
+                };
+                
+                await setDoc(testDocRef, testData);
+                
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ Successfully wrote to Firestore</div>
+                    <div class="status info">Document: test/connection-test</div>
+                    <div class="status info">Data: ${JSON.stringify(testData)}</div>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Error writing to Firestore</div>
+                    <div class="status error">Error: ${error.message}</div>
+                    <div class="status error">Code: ${error.code}</div>
+                `;
+                console.error('Firestore write error:', error);
+            }
+        }
+        
+        async function testFirestoreRead() {
+            const statusDiv = document.getElementById('read-status');
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Testing Firestore read...</div>';
+                
+                const testDocRef = doc(db, 'test', 'connection-test');
+                const testDoc = await getDoc(testDocRef);
+                
+                if (testDoc.exists()) {
+                    const data = testDoc.data();
+                    statusDiv.innerHTML = `
+                        <div class="status success">✅ Successfully read from Firestore</div>
+                        <div class="status info">Document exists: ${testDoc.exists()}</div>
+                        <div class="status info">Data: ${JSON.stringify(data)}</div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="status error">❌ Document does not exist</div>
+                        <div class="status info">Try running the write test first</div>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Error reading from Firestore</div>
+                    <div class="status error">Error: ${error.message}</div>
+                    <div class="status error">Code: ${error.code}</div>
+                `;
+                console.error('Firestore read error:', error);
+            }
+        }
+        
+        async function testUserDocument() {
+            const statusDiv = document.getElementById('user-status');
+            
+            if (!currentUser) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ No user signed in</div>
+                    <div class="status info">Please sign in with Google first</div>
+                `;
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Testing user document...</div>';
+                
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    statusDiv.innerHTML = `
+                        <div class="status success">✅ User document exists</div>
+                        <div class="status info">User ID: ${currentUser.uid}</div>
+                        <div class="status info">Email: ${userData.email}</div>
+                        <div class="status info">Favorites: ${userData.favorites ? userData.favorites.length : 0}</div>
+                        <div class="status info">Full data: ${JSON.stringify(userData)}</div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="status info">ℹ️ User document does not exist</div>
+                        <div class="status info">User ID: ${currentUser.uid}</div>
+                        <div class="status info">This is normal for new users</div>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Error accessing user document</div>
+                    <div class="status error">Error: ${error.message}</div>
+                    <div class="status error">Code: ${error.code}</div>
+                `;
+                console.error('User document error:', error);
+            }
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkFirebase();
+            }, 1000);
+        });
+    </script>
+</body>
+</html> 

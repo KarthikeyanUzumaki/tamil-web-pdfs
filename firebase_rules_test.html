@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Security Rules Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: white;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+            border: 1px solid #4CAF50;
+        }
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+            border: 1px solid #f44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+            border: 1px solid #2196F3;
+        }
+        .warning {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <h1>Firebase Security Rules Test</h1>
+    
+    <div class="test-section">
+        <h2>Step 1: Sign In</h2>
+        <button class="btn" onclick="signIn()">Sign In with Google</button>
+        <button class="btn" onclick="signOut()">Sign Out</button>
+        <div id="auth-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 2: Test Anonymous Access</h2>
+        <button class="btn" onclick="testAnonymousAccess()">Test Anonymous Access</button>
+        <div id="anonymous-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 3: Test Authenticated Access</h2>
+        <button class="btn" onclick="testAuthenticatedAccess()">Test Authenticated Access</button>
+        <div id="authenticated-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Step 4: Test User Document Access</h2>
+        <button class="btn" onclick="testUserDocumentAccess()">Test User Document</button>
+        <div id="user-doc-status"></div>
+    </div>
+
+    <script type="module">
+        // Import Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCz4FJZkyykx50RE0_i8yNEc9lOszxjlHI",
+            authDomain: "tamilpdflibrary.firebaseapp.com",
+            projectId: "tamilpdflibrary",
+            storageBucket: "tamilpdflibrary.appspot.com",
+            messagingSenderId: "730424795503",
+            appId: "1:730424795503:web:12fec7c518129ec145889a",
+            measurementId: "G-2DTDBLXCJH"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        let currentUser = null;
+        
+        // Listen for auth state changes
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            const statusDiv = document.getElementById('auth-status');
+            
+            if (user) {
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ User signed in: ${user.email}</div>
+                    <div class="status info">User ID: ${user.uid}</div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="status info">ℹ️ No user signed in</div>
+                `;
+            }
+        });
+        
+        // Make functions available globally
+        window.signIn = async () => {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                console.error('Sign in error:', error);
+                document.getElementById('auth-status').innerHTML = `
+                    <div class="status error">❌ Sign in failed: ${error.message}</div>
+                `;
+            }
+        };
+        
+        window.signOut = async () => {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                console.error('Sign out error:', error);
+            }
+        };
+        
+        window.testAnonymousAccess = async () => {
+            const statusDiv = document.getElementById('anonymous-status');
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Testing anonymous access...</div>';
+                
+                // Try to read a public document
+                const publicDocRef = doc(db, 'public', 'test');
+                const publicDoc = await getDoc(publicDocRef);
+                
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ Anonymous read access works</div>
+                    <div class="status info">Document exists: ${publicDoc.exists()}</div>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Anonymous access blocked</div>
+                    <div class="status error">Error: ${error.message}</div>
+                    <div class="status error">Code: ${error.code}</div>
+                    <div class="status warning">This suggests security rules are blocking anonymous access</div>
+                `;
+            }
+        };
+        
+        window.testAuthenticatedAccess = async () => {
+            const statusDiv = document.getElementById('authenticated-status');
+            
+            if (!currentUser) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Please sign in first</div>
+                `;
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Testing authenticated access...</div>';
+                
+                // Try to write to a test document
+                const testDocRef = doc(db, 'test', 'auth-test');
+                const testData = {
+                    userId: currentUser.uid,
+                    email: currentUser.email,
+                    timestamp: new Date(),
+                    test: true
+                };
+                
+                await setDoc(testDocRef, testData);
+                
+                statusDiv.innerHTML = `
+                    <div class="status success">✅ Authenticated write access works</div>
+                    <div class="status info">Document: test/auth-test</div>
+                    <div class="status info">Data: ${JSON.stringify(testData)}</div>
+                `;
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Authenticated access blocked</div>
+                    <div class="status error">Error: ${error.message}</div>
+                    <div class="status error">Code: ${error.code}</div>
+                    <div class="status warning">This suggests security rules are blocking authenticated access</div>
+                `;
+            }
+        };
+        
+        window.testUserDocumentAccess = async () => {
+            const statusDiv = document.getElementById('user-doc-status');
+            
+            if (!currentUser) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ Please sign in first</div>
+                `;
+                return;
+            }
+            
+            try {
+                statusDiv.innerHTML = '<div class="status info">Testing user document access...</div>';
+                
+                // Try to read user document
+                const userDocRef = doc(db, 'users', currentUser.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    statusDiv.innerHTML = `
+                        <div class="status success">✅ User document access works</div>
+                        <div class="status info">Document exists: ${userDoc.exists()}</div>
+                        <div class="status info">Email: ${userData.email}</div>
+                        <div class="status info">Favorites: ${userData.favorites ? userData.favorites.length : 0}</div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <div class="status info">ℹ️ User document does not exist (normal for new users)</div>
+                        <div class="status info">User ID: ${currentUser.uid}</div>
+                    `;
+                }
+                
+                // Try to write to user document
+                const testUserData = {
+                    email: currentUser.email,
+                    displayName: currentUser.displayName,
+                    favorites: ['test-pdf-1', 'test-pdf-2'],
+                    testTimestamp: new Date()
+                };
+                
+                await setDoc(userDocRef, testUserData, { merge: true });
+                
+                statusDiv.innerHTML += `
+                    <div class="status success">✅ User document write access works</div>
+                    <div class="status info">Test data written successfully</div>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="status error">❌ User document access blocked</div>
+                    <div class="status error">Error: ${error.message}</div>
+                    <div class="status error">Code: ${error.code}</div>
+                    <div class="status warning">This suggests security rules are blocking user document access</div>
+                `;
+            }
+        };
+    </script>
+</body>
+</html> 

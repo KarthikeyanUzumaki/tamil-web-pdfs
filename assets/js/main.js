@@ -143,16 +143,25 @@ async function loadPdfData() {
 async function loadUserFavorites() {
   if (!currentUser || !window.firebaseDb) {
     console.log('No user or Firebase not available');
+    console.log('Current user:', currentUser);
+    console.log('Firebase DB:', window.firebaseDb);
     return;
   }
   
   try {
     console.log('Loading favorites for user:', currentUser.uid);
+    console.log('User email:', currentUser.email);
+    
     const userDocRef = window.firestore.doc(window.firebaseDb, 'users', currentUser.uid);
+    console.log('User document reference:', userDocRef);
+    
     const userDoc = await window.firestore.getDoc(userDocRef);
+    console.log('User document exists:', userDoc.exists());
     
     if (userDoc.exists()) {
       const userData = userDoc.data();
+      console.log('User data from Firestore:', userData);
+      
       userFavorites = new Set(userData.favorites || []);
       console.log('Loaded favorites from Firestore:', Array.from(userFavorites));
       
@@ -164,26 +173,35 @@ async function loadUserFavorites() {
         }
       });
     } else {
+      console.log('User document does not exist, creating new one...');
       // Create user document if it doesn't exist
-      await window.firestore.setDoc(userDocRef, {
+      const newUserData = {
         email: currentUser.email,
         displayName: currentUser.displayName,
         favorites: [],
         createdAt: new Date()
-      });
+      };
+      
+      console.log('Creating user document with data:', newUserData);
+      await window.firestore.setDoc(userDocRef, newUserData);
+      
       userFavorites = new Set();
       console.log('Created new user document with empty favorites');
     }
   } catch (error) {
     console.error('Error loading favorites:', error);
+    console.error('Error details:', error.message);
+    console.error('Error code:', error.code);
     userFavorites = new Set();
   }
 }
 
 async function toggleFavorite(pdfId) {
-  console.log('toggleFavorite called with pdfId:', pdfId);
+  console.log('=== toggleFavorite called ===');
+  console.log('PDF ID:', pdfId);
   console.log('Current user:', currentUser);
   console.log('Firebase DB available:', !!window.firebaseDb);
+  console.log('Current favorites before toggle:', Array.from(userFavorites));
   
   if (!currentUser || !window.firebaseDb) {
     alert('Please sign in to add favorites');
@@ -192,6 +210,7 @@ async function toggleFavorite(pdfId) {
   
   try {
     const userDocRef = window.firestore.doc(window.firebaseDb, 'users', currentUser.uid);
+    console.log('User document reference:', userDocRef);
     
     if (userFavorites.has(pdfId)) {
       // Remove from favorites
@@ -203,14 +222,22 @@ async function toggleFavorite(pdfId) {
       console.log('Added to favorites:', pdfId);
     }
     
-    // Update Firestore
-    await window.firestore.setDoc(userDocRef, {
+    console.log('Favorites after toggle:', Array.from(userFavorites));
+    
+    // Prepare data for Firestore
+    const userData = {
       email: currentUser.email,
       displayName: currentUser.displayName,
       favorites: Array.from(userFavorites),
       updatedAt: new Date()
-    }, { merge: true });
+    };
     
+    console.log('Saving to Firestore with data:', userData);
+    
+    // Update Firestore
+    await window.firestore.setDoc(userDocRef, userData, { merge: true });
+    
+    console.log('✅ Successfully saved to Firestore');
     console.log('Favorites saved to Firestore:', Array.from(userFavorites));
     
     // Update UI immediately
@@ -223,7 +250,9 @@ async function toggleFavorite(pdfId) {
     }
     
   } catch (error) {
-    console.error('Error updating favorites:', error);
+    console.error('❌ Error updating favorites:', error);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
     alert('Error updating favorites. Please try again.');
   }
 }
