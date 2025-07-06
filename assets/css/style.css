@@ -37,14 +37,12 @@ body {
   position: fixed;
   top: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 20px 60px;
+  background: #000;
+  height: 64px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
   z-index: 999;
   transition: all 0.3s ease;
 }
@@ -87,9 +85,11 @@ body {
 
 .nav-links {
   display: flex;
+  align-items: center;
+  gap: 2rem;
   list-style: none;
-  gap: 40px;
-  margin: 0 auto;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-links li {
@@ -97,14 +97,11 @@ body {
 }
 
 .nav-links a {
-  color: #ffffff;
+  color: #fff;
   text-decoration: none;
+  font-size: 1.1rem;
   font-weight: 500;
-  font-size: 16px;
-  padding: 8px 0;
-  position: relative;
-  transition: all 0.3s ease;
-  letter-spacing: 0.5px;
+  transition: color 0.2s;
 }
 
 .nav-links a::after {
@@ -123,7 +120,7 @@ body {
 }
 
 .nav-links a:hover {
-  color: #cccccc;
+  color: #ff9800;
 }
 
 .auth {
@@ -204,16 +201,14 @@ body {
 }
 
 .hero {
-  height: 100vh;
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  min-height: 60vh;
   text-align: center;
-  padding-top: 100px;
-  color: white;
-  position: relative;
-  overflow: hidden;
+  background: none;
+  margin: 0;
+  padding: 0;
 }
 
 .hero::before {
@@ -234,6 +229,7 @@ body {
   z-index: 2;
   max-width: 800px;
   animation: fadeInUp 1s ease-out;
+  margin: 0 auto;
 }
 
 .hero h1 {
@@ -1014,42 +1010,30 @@ body {
 
 /* Heart Button Styles */
 .heart-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: transparent;
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  cursor: pointer;
+  outline: none;
+  padding: 0.3em 0.5em;
+  font-size: 1.6em;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 24px;
-  z-index: 1000;
-  pointer-events: auto;
-  user-select: none;
-  color: rgba(255, 255, 255, 0.6);
+  transition: transform 0.1s;
 }
-
-.heart-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.heart-btn:active {
   transform: scale(1.1);
-  color: rgba(255, 255, 255, 0.8);
 }
-
-.heart-btn.favorited {
-  background: transparent;
-  border: none;
-  color: #ff4757;
+.heart-icon {
+  width: 1.2em;
+  height: 1.2em;
+  display: inline-block;
+  vertical-align: middle;
+  transition: fill 0.2s, color 0.2s;
+  color: #bbb;
 }
-
-.heart-btn.favorited:hover {
-  background: rgba(255, 71, 87, 0.1);
-  transform: scale(1.1);
-  color: #ff3742;
+.heart-btn.favorited .heart-icon {
+  color: #e53935;
+  fill: #e53935;
 }
 
 /* PDF Card with Heart Button */
@@ -1148,5 +1132,20 @@ body {
 /* Favorites Grid */
 #favorites-grid {
   position: relative;
+  z-index: 2;
+}
+
+/* Remove heart styling from nav */
+#favoritesLink {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* PDF card heart button position */
+.pdf-card .heart-btn {
+  position: absolute;
+  top: 0.7em;
+  right: 0.7em;
   z-index: 2;
 }

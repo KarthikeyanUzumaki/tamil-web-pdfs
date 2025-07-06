@@ -257,19 +257,22 @@ async function toggleFavorite(pdfId) {
   }
 }
 
+function getHeartSVG(filled = false) {
+  return `<svg class="heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.2-5.2-8.5-8.1C1.7 10.1 2.6 7.1 5.1 5.7c2.1-1.1 4.3-0.2 5.6 1.3C11.1 6.1 13.3 5.2 15.4 5.7c2.5 1.4 3.4 4.4 1.6 7.2C18.2 15.8 12 21 12 21z" ${filled ? 'fill="#e53935"' : 'fill="none"'} /></svg>`;
+}
+
+function renderPDFCard(pdf) {
+  const isFavorited = userFavorites.has(pdf.id);
+  const heartBtn = `<button class="heart-btn${isFavorited ? ' favorited' : ''}" data-pdf-id="${pdf.id}" title="Add to Favorites">${getHeartSVG(isFavorited)}</button>`;
+  // ... use heartBtn in the card ...
+}
+
 function updateHeartButton(pdfId) {
-  const heartBtn = document.querySelector(`[data-pdf-id="${pdfId}"]`);
-  if (heartBtn) {
-    if (userFavorites.has(pdfId)) {
-      heartBtn.classList.add('favorited');
-      heartBtn.innerHTML = '♥';
-    } else {
-      heartBtn.classList.remove('favorited');
-      heartBtn.innerHTML = '♡';
-    }
-    console.log(`Updated heart button for ${pdfId}: ${userFavorites.has(pdfId) ? 'favorited' : 'not favorited'}`);
-  } else {
-    console.log(`Heart button not found for PDF ID: ${pdfId}`);
+  const btn = document.querySelector(`.heart-btn[data-pdf-id="${pdfId}"]`);
+  if (btn) {
+    const isFavorited = userFavorites.has(pdfId);
+    btn.classList.toggle('favorited', isFavorited);
+    btn.innerHTML = getHeartSVG(isFavorited);
   }
 }
 
@@ -307,9 +310,7 @@ function displayFavorites() {
       div.className = 'pdf-card';
       div.style.animationDelay = `${index * 0.1}s`;
       div.innerHTML = `
-        <button class="heart-btn favorited" data-pdf-id="${pdf.id}">
-          ♥
-        </button>
+        ${heartBtn}
         <div class="pdf-thumbnail" style="
           width: 100%;
           height: 120px;
@@ -525,15 +526,12 @@ function displayPdfs(category, page = 1, searchQuery = '') {
       
       // Check if this PDF is in user's favorites
       const isFavorited = userFavorites.has(pdf.id);
-      const heartIcon = isFavorited ? '♥' : '♡';
-      const heartClass = isFavorited ? 'heart-btn favorited' : 'heart-btn';
+      const heartBtn = `<button class="heart-btn${isFavorited ? ' favorited' : ''}" data-pdf-id="${pdf.id}" title="Add to Favorites">${getHeartSVG(isFavorited)}</button>`;
       
       console.log('Creating heart button for PDF:', pdf.id, 'Favorited:', isFavorited);
       
       div.innerHTML = `
-        <button class="${heartClass}" data-pdf-id="${pdf.id}" style="z-index: 1000;">
-          ${heartIcon}
-        </button>
+        ${heartBtn}
         <div class="pdf-thumbnail" style="
           width: 100%;
           height: 120px;
@@ -894,3 +892,15 @@ window.testHeartButton = function() {
     updateCategoryCards();
   }
 });
+
+// Smooth scroll and fix hero section alignment
+const homeLink = document.querySelector('a[href="#home"]');
+if (homeLink) {
+  homeLink.addEventListener('click', function(e) {
+    e.preventDefault();
+    const hero = document.getElementById('home');
+    if (hero) {
+      hero.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+}
