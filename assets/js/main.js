@@ -72,44 +72,70 @@ const itemsPerPage = 12;
 // Load PDF data from JSON file
 async function loadPdfData() {
   try {
+    console.log('Attempting to load PDF data from assets/data/pdfs.json...');
     const response = await fetch('assets/data/pdfs.json');
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     pdfDatabase = await response.json();
+    console.log('PDF data loaded successfully:', pdfDatabase);
     updateCategoryCards();
     return pdfDatabase;
   } catch (error) {
     console.error('Error loading PDF data:', error);
+    console.log('Falling back to sample data...');
     // Fallback to sample data
     pdfDatabase = {
       categories: {
-        "Poems": { name: "Poems", icon: "📝", count: 2, pdfs: [] },
-        "Literature": { name: "Literature", icon: "📚", count: 2, pdfs: [] },
-        "Thirukkural": { name: "Thirukkural", icon: "🏛️", count: 1, pdfs: [] }
+        "Poems": { name: "Poems", icon: "📝", count: 1, pdfs: [] },
+        "Literature": { name: "Literature", icon: "📚", count: 0, pdfs: [] },
+        "Thirukkural": { name: "Thirukkural", icon: "🏛️", count: 0, pdfs: [] }
       },
       pdfs: [
-        { id: "1", title: "Sample Poem", category: "Poems", author: "Author", viewUrl: "#", downloadUrl: "#" },
-        { id: "2", title: "Sample Literature", category: "Literature", author: "Author", viewUrl: "#", downloadUrl: "#" }
+        { 
+          id: "bba_001", 
+          title: "BBA", 
+          category: "Poems", 
+          author: "Karthik", 
+          viewUrl: "assets/pdfs/poems/BBA.pdf", 
+          downloadUrl: "assets/pdfs/poems/BBA.pdf",
+          fileSize: "539 KB",
+          pages: 0
+        }
       ]
     };
+    updateCategoryCards();
     return pdfDatabase;
   }
 }
 
 // Update category cards with real data
 function updateCategoryCards() {
-  if (!pdfDatabase) return;
+  console.log('updateCategoryCards called');
+  if (!pdfDatabase) {
+    console.log('No pdfDatabase available for updateCategoryCards');
+    return;
+  }
   
+  console.log('Updating category counts...');
   // Update category counts
   Object.keys(pdfDatabase.categories).forEach(categoryKey => {
     const categoryPdfs = pdfDatabase.pdfs.filter(pdf => pdf.category === categoryKey);
     pdfDatabase.categories[categoryKey].count = categoryPdfs.length;
+    console.log(`Category ${categoryKey}: ${categoryPdfs.length} PDFs`);
   });
   
   // Update category cards display
   const categoryCards = document.querySelectorAll('.category-card');
+  console.log(`Found ${categoryCards.length} category cards`);
+  
   categoryCards.forEach((card, index) => {
     const categories = Object.keys(pdfDatabase.categories);
     if (categories[index]) {
       const category = pdfDatabase.categories[categories[index]];
+      console.log(`Updating card ${index} with category:`, category);
       card.innerHTML = `
         ${category.icon} ${category.name}
         <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">${category.count} PDFs</div>
@@ -120,19 +146,30 @@ function updateCategoryCards() {
 
 // Get PDFs by category with pagination
 function getPdfsByCategory(category, page = 1, limit = itemsPerPage) {
-  if (!pdfDatabase) return { pdfs: [], totalPages: 0, currentPage: 1 };
+  console.log('getPdfsByCategory called with category:', category, 'page:', page);
+  console.log('pdfDatabase:', pdfDatabase);
+  
+  if (!pdfDatabase) {
+    console.log('No pdfDatabase available');
+    return { pdfs: [], totalPages: 0, currentPage: 1 };
+  }
   
   const categoryPdfs = pdfDatabase.pdfs.filter(pdf => pdf.category === category);
+  console.log('Filtered PDFs for category', category, ':', categoryPdfs);
+  
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
   const paginatedPdfs = categoryPdfs.slice(startIndex, endIndex);
   
-  return {
+  const result = {
     pdfs: paginatedPdfs,
     totalPages: Math.ceil(categoryPdfs.length / limit),
     currentPage: page,
     totalItems: categoryPdfs.length
   };
+  
+  console.log('getPdfsByCategory result:', result);
+  return result;
 }
 
 // Search PDFs
@@ -156,11 +193,17 @@ function searchPdfs(query, category = '') {
 
 // Enhanced PDF Display with Search and Pagination
 function displayPdfs(category, page = 1, searchQuery = '') {
+  console.log('displayPdfs called with category:', category, 'page:', page, 'searchQuery:', searchQuery);
+  console.log('Current pdfDatabase:', pdfDatabase);
+  
   const pdfListSection = document.getElementById('pdf-list');
   const pdfTitle = document.getElementById('pdf-title');
   const pdfGrid = document.getElementById('pdf-grid');
   
-  if (!pdfListSection) return;
+  if (!pdfListSection) {
+    console.error('pdf-list section not found');
+    return;
+  }
   
   currentCategory = category;
   currentPage = page;
@@ -181,6 +224,8 @@ function displayPdfs(category, page = 1, searchQuery = '') {
   } else {
     pdfsToShow = getPdfsByCategory(category, page);
   }
+  
+  console.log('PDFs to show:', pdfsToShow);
   
   // Update title
   pdfTitle.innerHTML = `
@@ -324,8 +369,17 @@ document.querySelectorAll('.category-card').forEach(card => {
     }
     
     const categoryText = card.textContent.trim();
-    // Extract category name (remove the PDF count)
-    const category = categoryText.split('\n')[0].replace(/📝|📚|🏛️|🏺|📖|🌐/g, '').trim();
+    console.log('Category card clicked, text:', categoryText);
+    
+    // Extract category name (remove the PDF count and icons)
+    let category = categoryText.split('\n')[0].replace(/📝|📚|🏛️|🏺|📖|🌐/g, '').trim();
+    
+    // If the category card hasn't been updated by updateCategoryCards yet, use the original text
+    if (!category) {
+      category = categoryText.trim();
+    }
+    
+    console.log('Extracted category:', category);
     
     // Add loading animation
     card.style.transform = 'scale(0.95)';
@@ -502,7 +556,13 @@ document.querySelectorAll('.form-group input, .form-group textarea').forEach(fie
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log('DOM loaded, initializing application...');
   // Load PDF data on page load
   await loadPdfData();
   console.log('PDF Database loaded:', pdfDatabase?.metadata);
+  
+  // Make sure category cards are updated
+  if (pdfDatabase) {
+    updateCategoryCards();
+  }
 });

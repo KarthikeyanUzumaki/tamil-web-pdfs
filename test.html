@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Test</title>
+</head>
+<body>
+    <h1>JSON Loading Test</h1>
+    <div id="result"></div>
+
+    <script>
+        async function testJsonLoading() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                console.log('Testing JSON loading...');
+                const response = await fetch('assets/data/pdfs.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('JSON loaded successfully:', data);
+                
+                resultDiv.innerHTML = `
+                    <h2>✅ JSON Loaded Successfully</h2>
+                    <p>Total PDFs: ${data.metadata.totalPdfs}</p>
+                    <p>Categories: ${Object.keys(data.categories).join(', ')}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('JSON loading failed:', error);
+                resultDiv.innerHTML = `
+                    <h2>❌ JSON Loading Failed</h2>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Run the test when page loads
+        testJsonLoading();
+    </script>
+</body>
+</html> 
