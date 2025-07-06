@@ -154,7 +154,15 @@ async function loadUserFavorites() {
     if (userDoc.exists()) {
       const userData = userDoc.data();
       userFavorites = new Set(userData.favorites || []);
-      console.log('Loaded favorites:', Array.from(userFavorites));
+      console.log('Loaded favorites from Firestore:', Array.from(userFavorites));
+      
+      // Update all visible heart buttons
+      document.querySelectorAll('.heart-btn').forEach(btn => {
+        const pdfId = btn.getAttribute('data-pdf-id');
+        if (pdfId) {
+          updateHeartButton(pdfId);
+        }
+      });
     } else {
       // Create user document if it doesn't exist
       await window.firestore.setDoc(userDocRef, {
@@ -164,7 +172,7 @@ async function loadUserFavorites() {
         createdAt: new Date()
       });
       userFavorites = new Set();
-      console.log('Created new user document');
+      console.log('Created new user document with empty favorites');
     }
   } catch (error) {
     console.error('Error loading favorites:', error);
@@ -203,8 +211,16 @@ async function toggleFavorite(pdfId) {
       updatedAt: new Date()
     }, { merge: true });
     
-    // Update UI
+    console.log('Favorites saved to Firestore:', Array.from(userFavorites));
+    
+    // Update UI immediately
     updateHeartButton(pdfId);
+    
+    // If we're on the favorites page, refresh it
+    const favoritesSection = document.getElementById('favorites');
+    if (favoritesSection && favoritesSection.style.display !== 'none') {
+      displayFavorites();
+    }
     
   } catch (error) {
     console.error('Error updating favorites:', error);
@@ -217,11 +233,14 @@ function updateHeartButton(pdfId) {
   if (heartBtn) {
     if (userFavorites.has(pdfId)) {
       heartBtn.classList.add('favorited');
-      heartBtn.innerHTML = '❤️';
+      heartBtn.innerHTML = '♥';
     } else {
       heartBtn.classList.remove('favorited');
-      heartBtn.innerHTML = '🤍';
+      heartBtn.innerHTML = '♡';
     }
+    console.log(`Updated heart button for ${pdfId}: ${userFavorites.has(pdfId) ? 'favorited' : 'not favorited'}`);
+  } else {
+    console.log(`Heart button not found for PDF ID: ${pdfId}`);
   }
 }
 
@@ -260,7 +279,7 @@ function displayFavorites() {
       div.style.animationDelay = `${index * 0.1}s`;
       div.innerHTML = `
         <button class="heart-btn favorited" data-pdf-id="${pdf.id}">
-          ❤️
+          ♥
         </button>
         <div class="pdf-thumbnail" style="
           width: 100%;
@@ -477,7 +496,7 @@ function displayPdfs(category, page = 1, searchQuery = '') {
       
       // Check if this PDF is in user's favorites
       const isFavorited = userFavorites.has(pdf.id);
-      const heartIcon = isFavorited ? '❤️' : '🤍';
+      const heartIcon = isFavorited ? '♥' : '♡';
       const heartClass = isFavorited ? 'heart-btn favorited' : 'heart-btn';
       
       console.log('Creating heart button for PDF:', pdf.id, 'Favorited:', isFavorited);

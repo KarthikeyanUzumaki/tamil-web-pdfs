@@ -1017,8 +1017,8 @@ body {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  border: none;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -1027,28 +1027,29 @@ body {
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 18px;
+  font-size: 24px;
   z-index: 1000;
   pointer-events: auto;
   user-select: none;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .heart-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
   transform: scale(1.1);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .heart-btn.favorited {
-  background: #ff4757;
-  border-color: #ff4757;
-  color: white;
+  background: transparent;
+  border: none;
+  color: #ff4757;
 }
 
 .heart-btn.favorited:hover {
-  background: #ff3742;
-  border-color: #ff3742;
+  background: rgba(255, 71, 87, 0.1);
   transform: scale(1.1);
+  color: #ff3742;
 }
 
 /* PDF Card with Heart Button */
@@ -1058,7 +1059,29 @@ body {
 
 /* Favorites Section */
 #favorites {
-  min-height: 60vh;
+  min-height: 100vh;
+  padding: 120px 60px 60px;
+  background: #0a0a0a;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+#favorites::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 80px 80px;
+  z-index: 1;
 }
 
 #favorites-title {
@@ -1069,6 +1092,7 @@ body {
   margin-bottom: 50px;
   position: relative;
   letter-spacing: 1px;
+  z-index: 2;
 }
 
 #favorites-title::after {
@@ -1088,6 +1112,8 @@ body {
   text-align: center;
   padding: 60px 20px;
   color: #cccccc;
+  z-index: 2;
+  position: relative;
 }
 
 .empty-favorites h3 {
@@ -1117,4 +1143,10 @@ body {
 .empty-favorites .btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-2px);
+}
+
+/* Favorites Grid */
+#favorites-grid {
+  position: relative;
+  z-index: 2;
 }
