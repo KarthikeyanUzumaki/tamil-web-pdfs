@@ -109,6 +109,16 @@ async function loadPdfData() {
     
     pdfDatabase = await response.json();
     console.log('PDF data loaded successfully:', pdfDatabase);
+    
+    // Update category counts based on actual PDFs
+    if (pdfDatabase.pdfs && pdfDatabase.categories) {
+      Object.keys(pdfDatabase.categories).forEach(categoryName => {
+        const categoryPdfs = pdfDatabase.pdfs.filter(pdf => pdf.category === categoryName);
+        pdfDatabase.categories[categoryName].count = categoryPdfs.length;
+        pdfDatabase.categories[categoryName].pdfs = categoryPdfs;
+      });
+    }
+    
     updateCategoryCards();
     return pdfDatabase;
   } catch (error) {
@@ -119,7 +129,10 @@ async function loadPdfData() {
       categories: {
         "Poems": { name: "Poems", icon: "📝", count: 1, pdfs: [] },
         "Literature": { name: "Literature", icon: "📚", count: 0, pdfs: [] },
-        "Thirukkural": { name: "Thirukkural", icon: "🏛️", count: 0, pdfs: [] }
+        "Thirukkural": { name: "Thirukkural", icon: "🏛️", count: 0, pdfs: [] },
+        "History": { name: "History", icon: "🏺", count: 0, pdfs: [] },
+        "Tamil Grammar": { name: "Tamil Grammar", icon: "📖", count: 0, pdfs: [] },
+        "English Translations": { name: "English Translations", icon: "🌐", count: 0, pdfs: [] }
       },
       pdfs: [
         { 
@@ -134,6 +147,14 @@ async function loadPdfData() {
         }
       ]
     };
+    
+    // Update category counts
+    Object.keys(pdfDatabase.categories).forEach(categoryName => {
+      const categoryPdfs = pdfDatabase.pdfs.filter(pdf => pdf.category === categoryName);
+      pdfDatabase.categories[categoryName].count = categoryPdfs.length;
+      pdfDatabase.categories[categoryName].pdfs = categoryPdfs;
+    });
+    
     updateCategoryCards();
     return pdfDatabase;
   }
@@ -309,8 +330,13 @@ function displayFavorites() {
       const div = document.createElement('div');
       div.className = 'pdf-card';
       div.style.animationDelay = `${index * 0.1}s`;
+      
+      // Check if this PDF is in user's favorites
+      const isFavorited = userFavorites.has(pdf.id);
+      const heartBtnHtml = `<button class="heart-btn${isFavorited ? ' favorited' : ''}" data-pdf-id="${pdf.id}" title="Add to Favorites">${getHeartSVG(isFavorited)}</button>`;
+      
       div.innerHTML = `
-        ${heartBtn}
+        ${heartBtnHtml}
         <div class="pdf-thumbnail" style="
           width: 100%;
           height: 120px;
@@ -358,8 +384,8 @@ function showCategorySection() {
   document.getElementById('category').style.display = 'block';
   document.getElementById('pdf-list').style.display = 'none';
   document.getElementById('favorites').style.display = 'none';
-  document.getElementById('home').style.display = 'none';
-  document.getElementById('contact').style.display = 'none';
+  document.getElementById('home').style.display = 'block';
+  document.getElementById('contact').style.display = 'block';
 }
 
 // Update category cards with real data
@@ -367,6 +393,12 @@ function updateCategoryCards() {
   console.log('updateCategoryCards called');
   if (!pdfDatabase) {
     console.log('No pdfDatabase available for updateCategoryCards');
+    return;
+  }
+  
+  const categoryGrid = document.getElementById('categoryGrid');
+  if (!categoryGrid) {
+    console.log('Category grid not found');
     return;
   }
   
@@ -378,20 +410,26 @@ function updateCategoryCards() {
     console.log(`Category ${categoryKey}: ${categoryPdfs.length} PDFs`);
   });
   
-  // Update category cards display
-  const categoryCards = document.querySelectorAll('.category-card');
-  console.log(`Found ${categoryCards.length} category cards`);
+  // Clear and recreate category cards
+  categoryGrid.innerHTML = '';
   
-  categoryCards.forEach((card, index) => {
-    const categories = Object.keys(pdfDatabase.categories);
-    if (categories[index]) {
-      const category = pdfDatabase.categories[categories[index]];
-      console.log(`Updating card ${index} with category:`, category);
-      card.innerHTML = `
-        ${category.icon} ${category.name}
-        <div style="font-size: 14px; margin-top: 8px; opacity: 0.8;">${category.count} PDFs</div>
-      `;
-    }
+  Object.keys(pdfDatabase.categories).forEach(categoryKey => {
+    const category = pdfDatabase.categories[categoryKey];
+    const card = document.createElement('div');
+    card.className = 'category-card';
+    card.innerHTML = `
+      <div class="category-icon">${category.icon}</div>
+      <h3>${category.name}</h3>
+      <p>${category.count} PDFs</p>
+    `;
+    
+    // Add click event to display PDFs for this category
+    card.addEventListener('click', () => {
+      console.log('Category clicked:', categoryKey);
+      displayPdfs(categoryKey);
+    });
+    
+    categoryGrid.appendChild(card);
   });
 }
 
@@ -526,12 +564,12 @@ function displayPdfs(category, page = 1, searchQuery = '') {
       
       // Check if this PDF is in user's favorites
       const isFavorited = userFavorites.has(pdf.id);
-      const heartBtn = `<button class="heart-btn${isFavorited ? ' favorited' : ''}" data-pdf-id="${pdf.id}" title="Add to Favorites">${getHeartSVG(isFavorited)}</button>`;
+      const heartBtnHtml = `<button class="heart-btn${isFavorited ? ' favorited' : ''}" data-pdf-id="${pdf.id}" title="Add to Favorites">${getHeartSVG(isFavorited)}</button>`;
       
       console.log('Creating heart button for PDF:', pdf.id, 'Favorited:', isFavorited);
       
       div.innerHTML = `
-        ${heartBtn}
+        ${heartBtnHtml}
         <div class="pdf-thumbnail" style="
           width: 100%;
           height: 120px;
@@ -681,6 +719,18 @@ document.querySelectorAll('.navbar a[href^="#"]').forEach(anchor => {
         return;
       }
       displayFavorites();
+    } else if (href === '#home') {
+      // Handle home link - show all sections and scroll to top
+      document.querySelectorAll('section').forEach(section => {
+        section.style.display = 'block';
+      });
+      document.getElementById('pdf-list').style.display = 'none';
+      document.getElementById('favorites').style.display = 'none';
+      
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
     } else {
       // Handle other navigation links
       const target = document.querySelector(href);
